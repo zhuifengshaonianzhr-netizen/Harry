@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能五子棋演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        /* 石头剪子布界面 */
+        .rps-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .rps-title {
+            font-size: 1.8em;
+            color: white;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .rps-choices {
+            display: flex;
+            gap: 20px;
+        }
+
+        .rps-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .rps-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* 石头剪子布结果显示 */
+        .rps-result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .result-text {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #ffeb3b;
+        }
+
+        /* 游戏界面 */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+
+        .current-player {
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .game-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .game-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 技能栏 */
+        .skills-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .skill-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+        }
+
+        .skill-btn {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skill-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .skill-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .skill-icon {
+            font-size: 2em;
+        }
+
+        .skill-name {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .skill-cooldown {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff5722;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .skill-desc {
+            color: white;
+            font-size: 0.9em;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        /* 棋盘 */
+        .board-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #d8a767;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .board-row {
+            display: flex;
+        }
+
+        .board-cell {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .board-cell::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: #000;
+            transform: translateY(50%);
+        }
+
+        .board-cell::after {
+            content: '';
+            position: absolute;
+            width: 1px;
+            height: 100%;
+            background: #000;
+            transform: translateX(50%);
+        }
+
+        /* 棋子 */
+        .piece {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            z-index: 2;
+            transition: all 0.2s ease;
+        }
+
+        .black-piece {
+            background: #000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .white-piece {
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .last-move {
+            box-shadow: 0 0 0 3px #ff5722;
+        }
+
+        /* 游戏结束 */
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .winner-text {
+            color: white;
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        /* 隐藏元素 */
+        .hidden {
+            display: none;
+        }
+
+        /* 游戏规则 */
+        .game-rules {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .rules-title {
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .rule-item {
+            color: white;
+            font-size: 1em;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>技能五子棋演示</h1>
+        
+        <!-- 石头剪子布界面 -->
+        <div id="rpsContainer" class="rps-container">
+            <div class="rps-title">石头剪子布决定先手</div>
+            <div class="rps-choices">
+                <button class="rps-btn" data-choice="石头">石头</button>
+                <button class="rps-btn" data-choice="剪刀">剪刀</button>
+                <button class="rps-btn" data-choice="布">布</button>
+            </div>
+            
+            <!-- AI对战选项 -->
+            <div style="margin-top: 20px; color: white; display: none;">
+                <label>
+                    <input type="checkbox" id="aiToggle" style="margin-right: 10px;" checked>
+                    启用AI对战
+                </label>
+                <div id="aiDifficulty" style="margin-top: 10px;">
+                    <label>AI难度: </label>
+                    <select id="difficultySelect" style="margin-left: 10px; padding: 5px; border-radius: 5px;">
+                        <option value="0">简单</option>
+                        <option value="1" selected>中等</option>
+                        <option value="2">困难</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 石头剪子布结果显示 -->
+        <div id="rpsResult" class="rps-result hidden">
+            <div>你出: <span id="playerChoice"></span></div>
+            <div>电脑出: <span id="computerChoice"></span></div>
+            <div class="result-text" id="resultText"></div>
+        </div>
+        
+        <!-- 游戏界面 -->
+        <div id="gameBoard" class="hidden">
+            <!-- 顶部信息栏 -->
+            <div class="game-header">
+                <div class="current-player">当前: <span id="currentPlayerText">黑子</span></div>
+                <button class="game-btn" id="undoBtn">悔棋</button>
+                <button class="game-btn" id="restartBtn">重新开始</button>
+            </div>
+            
+            <!-- 技能栏 -->
+            <div class="skills-container">
+                <div class="skill-item">
+                    <button class="skill-btn" id="skill0" data-index="0">
+                        <div class="skill-icon">🌪️</div>
+                        <div class="skill-name">飞沙走石</div>
+                        <div class="skill-cooldown hidden" id="cooldown0">3</div>
+                    </button>
+                    <div class="skill-desc">移除对方1颗棋子 (冷却: 3回合)</div>
+                </div>
+                
+                <div class="skill-item">
+                    <button class="skill-btn" id="skill1" data-index="1">
+                        <div class="skill-icon">💥</div>
+                        <div class="skill-name">力拔山兮</div>
+                        <div class="skill-cooldown hidden" id="cooldown1">5</div>
+                    </button>
+                    <div class="skill-desc">清除中心区域棋子 (冷却: 5回合)</div>
+                </div>
+                
+                <div class="skill-item">
+                    <button class="skill-btn" id="skill2" data-index="2">
+                        <div class="skill-icon">🔄</div>
+                        <div class="skill-name">东山再起</div>
+                        <div class="skill-cooldown hidden" id="cooldown2">1</div>
+                    </button>
+                    <div class="skill-desc">恢复被清除的棋子 (冷却: 1回合)</div>
+                </div>
+            </div>
+            
+            <!-- 棋盘 -->
+            <div class="board-container">
+                <div id="board"></div>
+            </div>
+            
+            <!-- 游戏结束提示 -->
+            <div id="gameOver" class="game-over hidden">
+                <div class="winner-text" id="winnerText">黑子获胜!</div>
+                <button class="game-btn" id="playAgainBtn">再来一局</button>
+                <button class="game-btn" id="homeBtn">返回首页</button>
+            </div>
+        </div>
+        
+        <!-- 游戏规则 -->
+        <div class="game-rules">
+            <div class="rules-title">游戏规则：</div>
+            <div class="rule-item">1. 15×15标准棋盘，通过石头剪子布决定谁先开始</div>
+            <div class="rule-item">2. 双方交替落子，率先在横、竖、斜向形成连续五子连线者获胜</div>
+            <div class="rule-item">3. 三种特色技能：</div>
+            <div class="rule-item">&nbsp;&nbsp;• 飞沙走石：移除对方1颗棋子（冷却3回合）</div>
+            <div class="rule-item">&nbsp;&nbsp;• 力拔山兮：清除棋盘中央区域的所有棋子（冷却5回合）</div>
+            <div class="rule-item">&nbsp;&nbsp;• 东山再起：回复被力拔山兮清除的棋子（冷却1回合）</div>
+            <div class="rule-item">4. 操作说明：</div>
+            <div class="rule-item">&nbsp;&nbsp;• 点击棋盘落子</div>
+            <div class="rule-item">&nbsp;&nbsp;• 点击技能图标使用技能</div>
+            <div class="rule-item">&nbsp;&nbsp;• 悔棋功能可撤销上一步操作</div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            board: [],
+            currentPlayer: 0, // 0: 黑子, 1: 白子
+            gameStatus: 'waiting', // waiting, playing, ended
+            winner: null,
+            lastMove: null,
+            moveHistory: [],
+            removedPieces: [],
+            skills: [
+                { name: '飞沙走石', cooldown: 3, currentCooldown: 0 },
+                { name: '力拔山兮', cooldown: 5, currentCooldown: 0 },
+                { name: '东山再起', cooldown: 1, currentCooldown: 0 }
+            ],
+            // AI相关状态
+            aiEnabled: true, // 是否启用AI
+            aiPlayer: 1, // AI玩家(默认白子)
+            aiDifficulty: 2 // AI难度级别 (0:简单, 1:中等, 2:困难)
+        };
+
+        // 初始化游戏
+        function initGame() {
+            // 初始化棋盘
+            gameState.board = [];
+            for (let i = 0; i < 15; i++) {
+                const row = [];
+                for (let j = 0; j < 15; j++) {
+                    row.push(null);
+                }
+                gameState.board.push(row);
+            }
+            
+            // 重置游戏状态
+            gameState.currentPlayer = 0;
+            gameState.gameStatus = 'waiting';
+            gameState.winner = null;
+            gameState.lastMove = null;
+            gameState.moveHistory = [];
+            gameState.removedPieces = [];
+            gameState.skills = [
+                { name: '飞沙走石', cooldown: 3, currentCooldown: 0 },
+                { name: '力拔山兮', cooldown: 5, currentCooldown: 0 },
+                { name: '东山再起', cooldown: 1, currentCooldown: 0 }
+            ];
+            
+            // 更新UI
+            renderBoard();
+            updateUI();
+            
+            // 显示石头剪子布界面
+            document.getElementById('rpsContainer').classList.remove('hidden');
+            document.getElementById('rpsResult').classList.add('hidden');
+            document.getElementById('gameBoard').classList.add('hidden');
+            document.getElementById('gameOver').classList.add('hidden');
+        }
+
+        // 评估棋盘位置的价值
+        function evaluatePosition(board, player) {
+            let score = 0;
+            const directions = [
+                [0, 1],  // 水平
+                [1, 0],  // 垂直
+                [1, 1],  // 对角线
+                [1, -1]  // 反对角线
+            ];
+            
+            // 评估连续子的数量
+            for (let i = 0; i < 15; i++) {
+                for (let j = 0; j < 15; j++) {
+                    if (board[i][j] !== null) {
+                        const piecePlayer = board[i][j];
+                        const multiplier = piecePlayer === player ? 1 : -1;
+                        
+                        for (let [dx, dy] of directions) {
+                            let count = 1;
+                            
+                            // 正方向检查
+                            for (let k = 1; k <= 4; k++) {
+                                const newRow = i + dx * k;
+                                const newCol = j + dy * k;
+                                if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
+                                    board[newRow][newCol] === piecePlayer) {
+                                    count++;
+                                } else {
+                                    break;
+                                }
+                            }
+                            
+                            // 反方向检查
+                            for (let k = 1; k <= 4; k++) {
+                                const newRow = i - dx * k;
+                                const newCol = j - dy * k;
+                                if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
+                                    board[newRow][newCol] === piecePlayer) {
+                                    count++;
+                                } else {
+                                    break;
+                                }
+                            }
+                            
+                            // 根据连续子数量评分
+                            if (count >= 5) {
+                                score += multiplier * 10000;
+                            } else if (count === 4) {
+                                score += multiplier * 1000;
+                            } else if (count === 3) {
+                                score += multiplier * 100;
+                            } else if (count === 2) {
+                                score += multiplier * 10;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return score;
+        }
+
+        // 计算最佳落子位置
+        function calculateBestMove() {
+            const player = gameState.currentPlayer;
+            let bestScore = -Infinity;
+            let bestMove = null;
+            
+            // 简单难度：随机选择
+            if (gameState.aiDifficulty === 0) {
+                const emptyCells = [];
+                for (let i = 0; i < 15; i++) {
+                    for (let j = 0; j < 15; j++) {
+                        if (gameState.board[i][j] === null) {
+                            emptyCells.push({ row: i, col: j });
+                        }
+                    }
+                }
+                
+                if (emptyCells.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                    return emptyCells[randomIndex];
+                }
+                return null;
+            }
+            
+            // 中等和困难难度：评估每个可能的位置
+            for (let i = 0; i < 15; i++) {
+                for (let j = 0; j < 15; j++) {
+                    if (gameState.board[i][j] === null) {
+                        // 临时落子
+                        gameState.board[i][j] = player;
+                        
+                        // 评估位置
+                        const score = evaluatePosition(gameState.board, player);
+                        
+                        // 撤销临时落子
+                        gameState.board[i][j] = null;
+                        
+                        // 更新最佳位置
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = { row: i, col: j };
+                        }
+                    }
+                }
+            }
+            
+            return bestMove;
+        }
+
+        // AI使用技能策略
+        function aiUseSkill() {
+            // 简单难度：不使用技能
+            if (gameState.aiDifficulty === 0) {
+                return false;
+            }
+            
+            // 中等难度：随机使用技能
+            if (gameState.aiDifficulty === 1) {
+                if (Math.random() < 0.3) { // 30%概率使用技能
+                    const availableSkills = [];
+                    for (let i = 0; i < 3; i++) {
+                        if (gameState.skills[i].currentCooldown === 0) {
+                            availableSkills.push(i);
+                        }
+                    }
+                    
+                    if (availableSkills.length > 0) {
+                        const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                        useSkill(randomSkill);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            // 困难难度：智能使用技能
+            if (gameState.aiDifficulty === 2) {
+                // 检查是否能获胜
+                for (let i = 0; i < 15; i++) {
+                    for (let j = 0; j < 15; j++) {
+                        if (gameState.board[i][j] === null) {
+                            // 临时落子
+                            gameState.board[i][j] = gameState.currentPlayer;
+                            
+                            // 检查是否获胜
+                            if (checkWin(i, j, gameState.currentPlayer)) {
+                                // 撤销临时落子
+                                gameState.board[i][j] = null;
+                                
+                                // 如果能获胜，不使用技能，直接落子
+                                return false;
+                            }
+                            
+                            // 撤销临时落子
+                            gameState.board[i][j] = null;
+                        }
+                    }
+                }
+                
+                // 随机使用技能
+                if (Math.random() < 0.5) { // 50%概率使用技能
+                    const availableSkills = [];
+                    for (let i = 0; i < 3; i++) {
+                        if (gameState.skills[i].currentCooldown === 0) {
+                            availableSkills.push(i);
+                        }
+                    }
+                    
+                    if (availableSkills.length > 0) {
+                        const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                        useSkill(randomSkill);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            // 超级困难难度：更加激进和智能地使用技能
+            if (gameState.aiDifficulty === 3) {
+                // 检查是否能获胜
+                for (let i = 0; i < 15; i++) {
+                    for (let j = 0; j < 15; j++) {
+                        if (gameState.board[i][j] === null) {
+                            // 临时落子
+                            gameState.board[i][j] = gameState.currentPlayer;
+                            
+                            // 检查是否获胜
+                            if (checkWin(i, j, gameState.currentPlayer)) {
+                                // 撤销临时落子
+                                gameState.board[i][j] = null;
+                                
+                                // 如果能获胜，不使用技能，直接落子
+                                return false;
+                            }
+                            
+                            // 撤销临时落子
+                            gameState.board[i][j] = null;
+                        }
+                    }
+                }
+                
+                // 检查对手是否即将获胜，如果是则使用技能阻止
+                const opponent = 1 - gameState.currentPlayer;
+                for (let i = 0; i < 15; i++) {
+                    for (let j = 0; j < 15; j++) {
+                        if (gameState.board[i][j] === null) {
+                            // 临时落子（对手）
+                            gameState.board[i][j] = opponent;
+                            
+                            // 检查对手是否获胜
+                            if (checkWin(i, j, opponent)) {
+                                // 撤销临时落子
+                                gameState.board[i][j] = null;
+                                
+                                // 使用飞沙走石技能移除对手的棋子
+                                if (gameState.skills[0].currentCooldown === 0) {
+                                    useSkill(0);
+                                    return true;
+                                }
+                                
+                                // 如果飞沙走石不可用，尝试其他技能
+                                if (gameState.skills[1].currentCooldown === 0) {
+                                    useSkill(1);
+                                    return true;
+                                }
+                            }
+                            
+                            // 撤销临时落子
+                            gameState.board[i][j] = null;
+                        }
+                    }
+                }
+                
+                // 更高概率使用技能
+                if (Math.random() < 0.7) { // 70%概率使用技能
+                    const availableSkills = [];
+                    for (let i = 0; i < 3; i++) {
+                        if (gameState.skills[i].currentCooldown === 0) {
+                            availableSkills.push(i);
+                        }
+                    }
+                    
+                    if (availableSkills.length > 0) {
+                        // 优先使用更强大的技能
+                        if (availableSkills.includes(1)) { // 力拔山兮
+                            useSkill(1);
+                            return true;
+                        } else if (availableSkills.includes(0)) { // 飞沙走石
+                            useSkill(0);
+                            return true;
+                        } else if (availableSkills.includes(2)) { // 东山再起
+                            useSkill(2);
+                            return true;
+                        }
+                        
+                        // 如果没有特别优先的技能，随机选择
+                        const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                        useSkill(randomSkill);
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        // AI执行移动
+        function makeAIMove() {
+            if (gameState.gameStatus !== 'playing') return;
+            
+            // 先尝试使用技能
+            if (aiUseSkill()) {
+                // 技能使用后更新UI
+                renderBoard();
+                updateUI();
+                
+                // 检查游戏是否结束
+                if (gameState.gameStatus === 'ended') return;
+                
+                // 切换玩家
+                gameState.currentPlayer = 1 - gameState.currentPlayer;
+                
+                // 减少技能冷却时间
+                reduceCooldown();
+                
+                // 更新UI
+                renderBoard();
+                updateUI();
+                
+                // 如果轮到AI下棋，则继续
+                if (gameState.aiEnabled && gameState.aiPlayer === gameState.currentPlayer) {
+                    setTimeout(makeAIMove, 1000);
+                }
+                return;
+            }
+            
+            // 计算最佳落子位置
+            const move = calculateBestMove();
+            
+            if (move) {
+                // 执行落子
+                placePiece(move.row, move.col);
+            }
+        }
+
+        // 渲染棋盘
+        function renderBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            
+            for (let i = 0; i < 15; i++) {
+                const rowElement = document.createElement('div');
+                rowElement.className = 'board-row';
+                
+                for (let j = 0; j < 15; j++) {
+                    const cellElement = document.createElement('div');
+                    cellElement.className = 'board-cell';
+                    cellElement.dataset.row = i;
+                    cellElement.dataset.col = j;
+                    
+                    // 添加棋子
+                    if (gameState.board[i][j] !== null) {
+                        const pieceElement = document.createElement('div');
+                        pieceElement.className = `piece ${gameState.board[i][j] === 0 ? 'black-piece' : 'white-piece'} ${gameState.lastMove && gameState.lastMove.row === i && gameState.lastMove.col === j ? 'last-move' : ''}`;
+                        cellElement.appendChild(pieceElement);
+                    }
+                    
+                    cellElement.addEventListener('click', () => placePiece(i, j));
+                    rowElement.appendChild(cellElement);
+                }
+                
+                boardElement.appendChild(rowElement);
+            }
+        }
+
+        // 更新UI
+        function updateUI() {
+            // 更新当前玩家显示
+            document.getElementById('currentPlayerText').textContent = 
+                gameState.currentPlayer === 0 ? '黑子' : '白子';
+            
+            // 更新技能冷却时间
+            for (let i = 0; i < 3; i++) {
+                const skill = gameState.skills[i];
+                const cooldownElement = document.getElementById(`cooldown${i}`);
+                const skillBtn = document.getElementById(`skill${i}`);
+                
+                if (skill.currentCooldown > 0) {
+                    cooldownElement.textContent = skill.currentCooldown;
+                    cooldownElement.classList.remove('hidden');
+                    skillBtn.disabled = true;
+                } else {
+                    cooldownElement.classList.add('hidden');
+                    skillBtn.disabled = false;
+                }
+            }
+        }
+
+        // 玩家选择石头剪子布
+        function selectRPS(choice) {
+            const choices = ['石头', '剪刀', '布'];
+            const computerChoice = choices[Math.floor(Math.random() * 3)];
+            
+            // 显示结果
+            document.getElementById('playerChoice').textContent = choice;
+            document.getElementById('computerChoice').textContent = computerChoice;
+            
+            // 判断胜负
+            let result = '';
+            if (choice === computerChoice) {
+                result = '平局';
+            } else if (
+                (choice === '石头' && computerChoice === '剪刀') ||
+                (choice === '剪刀' && computerChoice === '布') ||
+                (choice === '布' && computerChoice === '石头')
+            ) {
+                result = '你赢了，先手';
+                gameState.currentPlayer = 0;
+                // 如果启用AI，则AI为白子(后手)
+                if (gameState.aiEnabled) {
+                    gameState.aiPlayer = 1;
+                }
+            } else {
+                result = '电脑赢了，后手';
+                gameState.currentPlayer = 1;
+                // 如果启用AI，则AI为黑子(先手)
+                if (gameState.aiEnabled) {
+                    gameState.aiPlayer = 0;
+                }
+            }
+            
+            document.getElementById('resultText').textContent = result;
+            
+            // 切换界面
+            document.getElementById('rpsContainer').classList.add('hidden');
+            document.getElementById('rpsResult').classList.remove('hidden');
+            
+            // 2秒后开始游戏
+            setTimeout(() => {
+                document.getElementById('rpsResult').classList.add('hidden');
+                document.getElementById('gameBoard').classList.remove('hidden');
+                gameState.gameStatus = 'playing';
+                updateUI();
+                
+                // 如果启用AI且AI是先手，则让AI下第一步
+                if (gameState.aiEnabled && gameState.aiPlayer === gameState.currentPlayer) {
+                    setTimeout(makeAIMove, 1000);
+                }
+            }, 2000);
+        }
+
+        // 落子
+        function placePiece(row, col) {
+            if (gameState.gameStatus !== 'playing' || gameState.board[row][col] !== null) return;
+            
+            // 更新棋盘状态
+            gameState.board[row][col] = gameState.currentPlayer;
+            gameState.lastMove = { row, col };
+            gameState.moveHistory.push({ row, col, player: gameState.currentPlayer });
+            
+            // 检查是否获胜
+            if (checkWin(row, col, gameState.currentPlayer)) {
+                endGame(gameState.currentPlayer);
+                return;
+            }
+            
+            // 切换玩家
+            gameState.currentPlayer = 1 - gameState.currentPlayer;
+            
+            // 减少技能冷却时间
+            reduceCooldown();
+            
+            // 更新UI
+            renderBoard();
+            updateUI();
+            
+            // 如果启用AI且轮到AI下棋，则让AI下棋
+            if (gameState.aiEnabled && gameState.aiPlayer === gameState.currentPlayer) {
+                setTimeout(makeAIMove, 1000);
+            }
+        }
+
+        // 检查是否获胜
+        function checkWin(row, col, player) {
+            const directions = [
+                [0, 1],  // 水平
+                [1, 0],  // 垂直
+                [1, 1],  // 对角线
+                [1, -1]  // 反对角线
+            ];
+            
+            for (let [dx, dy] of directions) {
+                let count = 1; // 包含当前棋子
+                
+                // 正方向检查
+                for (let i = 1; i <= 4; i++) {
+                    const newRow = row + dx * i;
+                    const newCol = col + dy * i;
+                    if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
+                        gameState.board[newRow][newCol] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // 反方向检查
+                for (let i = 1; i <= 4; i++) {
+                    const newRow = row - dx * i;
+                    const newCol = col - dy * i;
+                    if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
+                        gameState.board[newRow][newCol] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                if (count >= 5) return true;
+            }
+            
+            return false;
+        }
+
+        // 结束游戏
+        function endGame(winner) {
+            gameState.gameStatus = 'ended';
+            gameState.winner = winner;
+            
+            // 显示游戏结束界面
+            document.getElementById('winnerText').textContent = 
+                (winner === 0 ? '黑子' : '白子') + '获胜!';
+            document.getElementById('gameOver').classList.remove('hidden');
+        }
+
+        // 使用技能
+        function useSkill(index) {
+            if (gameState.gameStatus !== 'playing') return;
+            
+            const skill = gameState.skills[index];
+            
+            // 检查冷却时间
+            if (skill.currentCooldown > 0) {
+                alert(`技能冷却中，还需${skill.currentCooldown}回合`);
+                return;
+            }
+            
+            switch(index) {
+                case 0: // 飞沙走石
+                    useFeisha();
+                    break;
+                case 1: // 力拔山兮
+                    useLiba();
+                    break;
+                case 2: // 东山再起
+                    useDongshan();
+                    break;
+            }
+            
+            // 设置冷却时间
+            gameState.skills[index].currentCooldown = skill.cooldown;
+            
+            // 更新UI
+            renderBoard();
+            updateUI();
+        }
+
+        // 飞沙走石技能
+        function useFeisha() {
+            alert('飞沙走石：点击对方棋子移除');
+            // 添加选择对方棋子的逻辑
+            const boardElement = document.getElementById('board');
+            boardElement.classList.add('selecting-target');
+            
+            // 为所有对手棋子添加点击事件
+            document.querySelectorAll('.piece').forEach(piece => {
+                const cell = piece.parentElement;
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const pieceType = piece.classList.contains('black-piece') ? 0 : 1;
+                
+                // 只能选择对手的棋子
+                if (pieceType !== gameState.currentPlayer) {
+                    piece.classList.add('targetable');
+                    piece.addEventListener('click', function removeTarget() {
+                        // 移除棋子
+                        gameState.board[row][col] = null;
+                        
+                        // 更新UI
+                        renderBoard();
+                        updateUI();
+                        
+                        // 移除事件监听器和样式
+                        piece.classList.remove('targetable');
+                        piece.removeEventListener('click', removeTarget);
+                        boardElement.classList.remove('selecting-target');
+                    });
+                }
+            });
+        }
+
+        // 力拔山兮技能
+        function useLiba() {
+            // 定义中心区域(7x7)
+            const centerStart = 4;
+            const centerEnd = 10;
+            
+            for (let i = centerStart; i <= centerEnd; i++) {
+                for (let j = centerStart; j <= centerEnd; j++) {
+                    if (gameState.board[i][j] !== null) {
+                        // 保存被移除的棋子
+                        gameState.removedPieces.push({
+                            row: i,
+                            col: j,
+                            piece: gameState.board[i][j]
+                        });
+                        
+                        // 移除棋子
+                        gameState.board[i][j] = null;
+                    }
+                }
+            }
+            
+            alert('力拔山兮：已清除中心区域棋子');
+        }
+
+        // 东山再起技能
+        function useDongshan() {
+            if (gameState.removedPieces.length === 0) {
+                alert('没有可恢复的棋子');
+                return;
+            }
+            
+            // 恢复最后移除的棋子
+            const lastRemoved = gameState.removedPieces.pop();
+            gameState.board[lastRemoved.row][lastRemoved.col] = lastRemoved.piece;
+            
+            alert('东山再起：已恢复1颗棋子');
+        }
+
+        // 减少技能冷却时间
+        function reduceCooldown() {
+            gameState.skills.forEach(skill => {
+                if (skill.currentCooldown > 0) {
+                    skill.currentCooldown--;
+                }
+            });
+        }
+
+        // 悔棋
+        function undoMove() {
+            if (gameState.moveHistory.length === 0 || gameState.gameStatus !== 'playing') return;
+            
+            const lastMove = gameState.moveHistory.pop();
+            gameState.board[lastMove.row][lastMove.col] = null;
+            gameState.currentPlayer = lastMove.player;
+            gameState.lastMove = gameState.moveHistory.length > 0 ? 
+                gameState.moveHistory[gameState.moveHistory.length - 1] : null;
+            
+            // 恢复技能冷却时间
+            gameState.skills.forEach(skill => {
+                if (skill.currentCooldown < skill.cooldown) {
+                    skill.currentCooldown++;
+                }
+            });
+            
+            // 更新UI
+            renderBoard();
+            updateUI();
+        }
+
+        // 事件监听器
+        document.addEventListener('DOMContentLoaded', () => {
+            // 石头剪子布按钮
+            document.querySelectorAll('.rps-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectRPS(btn.dataset.choice);
+                });
+            });
+            
+            // 技能按钮
+            document.querySelectorAll('.skill-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    useSkill(parseInt(btn.dataset.index));
+                });
+            });
+            
+            // AI难度选择
+            document.getElementById('difficultySelect').addEventListener('change', (e) => {
+                gameState.aiDifficulty = parseInt(e.target.value);
+            });
+            
+            // 其他按钮
+            document.getElementById('undoBtn').addEventListener('click', undoMove);
+            document.getElementById('restartBtn').addEventListener('click', initGame);
+            document.getElementById('playAgainBtn').addEventListener('click', initGame);
+            document.getElementById('homeBtn').addEventListener('click', () => {
+                document.getElementById('gameOver').classList.add('hidden');
+                document.getElementById('rpsContainer').classList.remove('hidden');
+                initGame();
+            });
+            
+            // 初始化游戏
+            initGame();
+        });
+    </script>
+</body>
+</html>
